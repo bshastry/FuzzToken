@@ -10,15 +10,38 @@ contract FuzzToken {
     uint8 constant public decimals = 18;
 
     uint public totalSupply;
+    address public owner;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
 
-    function transfer(address to, uint value) external returns (bool) {
-        return _transfer(msg.sender, to, value);
+    constructor(address _owner) {
+        owner = _owner;
     }
 
-    function transferOneToken() external {
-        balanceOf[msg.sender] += 1e18;
+    function _mint(address to, uint value) private {
+        balanceOf[to] += value;
+        totalSupply += value;
+    }
+
+    function mint(address to, uint value) external {
+        require(msg.sender == owner, "You are not allowed to mint tokens");
+        _mint(to, value);
+        emit Transfer(address(0), to, value);
+    }
+
+    function _burn(address from, uint value) private {
+        balanceOf[from] -= value;
+        totalSupply -= value;
+    }
+
+    function burn(address from, uint value) external {
+        require(msg.sender == owner, "You are not allowed to burn tokens");
+        _burn(from, value);
+        emit Transfer(from, address(0), value);
+    }
+
+    function transfer(address to, uint value) external returns (bool) {
+        return _transfer(msg.sender, to, value);
     }
 
     function transferFrom(address from, address to, uint value) external returns (bool) {
