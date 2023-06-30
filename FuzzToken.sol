@@ -18,26 +18,37 @@ contract FuzzToken {
         owner = _owner;
     }
 
+    function deposit() external payable {
+        _mint(msg.sender, msg.value);
+    }
+
+    function redeem(address payable _owner, uint _value) external {
+        this.transferFrom(address(_owner), msg.sender, _value);
+	_burn(msg.sender, _value);
+        (bool success, ) = _owner.call{value: _value}("");
+        require(success, "Redeem unsuccessful");
+    }
+
     function _mint(address to, uint value) private {
         balanceOf[to] += value;
         totalSupply += value;
+        emit Transfer(address(0), msg.sender, value);
     }
 
     function mint(address to, uint value) external {
         require(msg.sender == owner, "You are not allowed to mint tokens");
         _mint(to, value);
-        emit Transfer(address(0), to, value);
     }
 
     function _burn(address from, uint value) private {
         balanceOf[from] -= value;
         totalSupply -= value;
+        emit Transfer(from, address(0), value);
     }
 
     function burn(address from, uint value) external {
         require(msg.sender == owner, "You are not allowed to burn tokens");
         _burn(from, value);
-        emit Transfer(from, address(0), value);
     }
 
     function transfer(address to, uint value) external returns (bool) {
